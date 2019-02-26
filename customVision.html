@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analyze Sample</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+    function processImage() {
+        //填上申請好的API KEY
+        var subscriptionKey = "Your subscription key";
+        //確認區域與所選擇的相同，因為使用免費的，所以區域選West Center US
+        var uriBase = "Your Custom Vision Url";
+        
+        var params = {
+            "iterationId":"Your Iteration ID",
+        };
+        //顯示分析的圖片
+        var sourceImageUrl = document.getElementById("inputImage").value;
+        document.querySelector("#sourceImage").src = sourceImageUrl;
+        //送出分析
+        $.ajax({
+            url: uriBase+ "?" + $.param(params),
+            // Request header
+            beforeSend: function(xhrObj){
+                xhrObj.setRequestHeader("Content-Type","application/json");
+                xhrObj.setRequestHeader("Prediction-Key", subscriptionKey);
+            },
+            type: "POST",
+            // Request body
+            data: '{"Url":'+'"'+sourceImageUrl+'"}',
+        })
+        .done(function(data) {
+            //顯示JSON內容
+            $("#responseTextArea").val(JSON.stringify(data, null, 2));
+            console.log("[pre0] "+data.predictions[0].probability);
+            console.log("[pre1] "+data.predictions[1].probability);
+            for(var x=0;x<data.predictions.length;x++){
+                if(data.predictions[x].tagName=="YourTagName" & data.predictions[x].probability>=0.8){
+                    $("#resultH1").text("這是"+"YourTagName");
+                    break;
+                }else{
+                    $("#resultH1").html("這不是"+"YourTagName"+"！<br>這怎麼可能是"+"YourTagName！");
+                    break;
+                }
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            //丟出錯誤訊息
+            var errorString = (errorThrown === "") ? "Error. " : errorThrown + " (" + jqXHR.status + "): ";
+            errorString += (jqXHR.responseText === "") ? "" : jQuery.parseJSON(jqXHR.responseText).message;
+            alert(errorString);
+        });
+    };
+</script>
+
+<h1>Analyze image:</h1>
+輸入一個圖片網址，然後按下 <strong>分析圖片</strong> 按鈕.
+<br><br>
+Image to analyze: <input type="text" name="inputImage" id="inputImage" value="https://www.petmd.com/sites/default/files/petmd-cat-happy-10.jpg" />
+<button onclick="processImage()">分析圖片</button>
+<br><br>
+<div id="wrapper" style="width:1020px; display:table;">
+    <div id="jsonOutput" style="width:600px; display:table-cell;">
+        Response:
+        <br><br>
+        <textarea id="responseTextArea" class="UIInput" style="width:580px; height:400px;"></textarea>
+    </div>
+    <div id="imageDiv" style="width:420px; display:table-cell;">
+        Source image:
+        <br><br>
+        <img id="sourceImage" width="400" />
+        <h1 id="resultH1"></h1>
+    </div>
+</div>
+</body>
+</html>
