@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analyze Sample</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+    function processImage() {
+        //Fill in your API KEY
+        var subscriptionKey = "Your API Key here.";
+
+        //Make sure your API Key is for the same area, this sample is for West Center US
+        //If different, change the first word in web address.
+        var uriBase = "https://westcentralus.api.cognitive.microsoft.com/vision/v1.0/analyze";
+
+        
+        var params = {
+            "visualFeatures": "Categories,Description,Color",
+            "details": "",
+            "language": "en",
+        };
+
+        //Show your picture in the right area
+        var sourceImageUrl = document.getElementById("inputImage").value;
+        document.querySelector("#sourceImage").src = sourceImageUrl;
+
+        //Send to Cognitive Service to analyze
+        $.ajax({
+            url: uriBase + "?" + $.param(params),
+
+            // Request header
+            beforeSend: function(xhrObj){
+                xhrObj.setRequestHeader("Content-Type","application/json");
+                xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
+            },
+
+            type: "POST",
+
+            // Request body
+            data: '{"url": ' + '"' + sourceImageUrl + '"}',
+        })
+
+        .done(function(data) {
+            //Show the result in JSON format
+            $("#responseTextArea").val(JSON.stringify(data, null, 2));
+        })
+
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            //Show error messages if fail
+            var errorString = (errorThrown === "") ? "Error. " : errorThrown + " (" + jqXHR.status + "): ";
+            errorString += (jqXHR.responseText === "") ? "" : jQuery.parseJSON(jqXHR.responseText).message;
+            alert(errorString);
+        });
+    };
+</script>
+
+<h1>Analyze image:</h1>
+Pleases inout your picture web address here then click the <strong>Analyze</strong> button.
+<br><br>
+Image to analyze: <input type="text" name="inputImage" id="inputImage" value="https://www.petmd.com/sites/default/files/petmd-cat-happy-10.jpg" />
+<button onclick="processImage()">Analyze</button>
+<br><br>
+<div id="wrapper" style="width:1020px; display:table;">
+    <div id="jsonOutput" style="width:600px; display:table-cell;">
+        Response:
+        <br><br>
+        <textarea id="responseTextArea" class="UIInput" style="width:580px; height:400px;"></textarea>
+    </div>
+    <div id="imageDiv" style="width:420px; display:table-cell;">
+        Source image:
+        <br><br>
+        <img id="sourceImage" width="400" />
+    </div>
+</div>
+</body>
+</html>
